@@ -43,6 +43,10 @@ RUN apt-get update && apt-get install --no-install-recommends -y gzip wget git j
 COPY --from=tool_builder /build/kubectl /usr/local/bin/kubectl
 
 WORKDIR /viya4-deployment/
+
+#
+# copy the .aws folder to the folder from which you run the "docker build" command
+#
 COPY . /viya4-deployment/
 
 ENV HOME=/viya4-deployment
@@ -55,6 +59,12 @@ RUN pip install -r ./requirements.txt \
   && chmod -R g=u /etc/passwd /etc/group /viya4-deployment/ \
   && chmod 755 /viya4-deployment/docker-entrypoint.sh \
   && git config --system --add safe.directory /viya4-deployment
+
+# 
+# authenticate Helm to AWS ECR and adjust permissions
+#
+RUN aws ecr get-login-password --region il-central-1 | helm registry login --username AWS --password-stdin 855334947981.dkr.ecr.il-central-1.amazonaws.com
+RUN chmod ugo+rwx /viya4-deployment/.config -R
 
 ENV PLAYBOOK=playbook.yaml
 ENV VIYA4_DEPLOYMENT_TOOLING=docker
