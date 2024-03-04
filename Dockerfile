@@ -64,7 +64,7 @@ RUN pip install -r ./requirements.txt \
 # authenticate Helm to AWS ECR and adjust permissions
 #
 RUN aws ecr get-login-password --region il-central-1 | helm registry login --username AWS --password-stdin 855334947981.dkr.ecr.il-central-1.amazonaws.com
-RUN chmod ugo+rwx /viya4-deployment/.config -R
+RUN chmod 660 /viya4-deployment/.config -R
 
 ENV PLAYBOOK=playbook.yaml
 ENV VIYA4_DEPLOYMENT_TOOLING=docker
