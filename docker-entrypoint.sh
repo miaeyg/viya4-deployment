@@ -11,6 +11,7 @@ chmod 770 /viya4-deployment/.config -R
 
 # Authenticate docker to AWS ECR
 aws ecr get-login-password --region il-central-1 | sudo docker login --username AWS --password-stdin 855334947981.dkr.ecr.il-central-1.amazonaws.com
+chmod 770 /viya4-deployment/.docker -R
 
 # setup container user
 echo "viya4-deployment:*:$(id -u):$(id -g):,,,:/viya4-deployment:/bin/bash" >> /etc/passwd
