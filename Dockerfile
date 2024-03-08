@@ -60,12 +60,6 @@ RUN pip install -r ./requirements.txt \
   && chmod 755 /viya4-deployment/docker-entrypoint.sh \
   && git config --system --add safe.directory /viya4-deployment
 
-# 
-# authenticate Helm to AWS ECR and adjust permissions so that root group can rwx (assuming the docker run invoking this uses the --group-add root --user $(id -u):$(id -g) options
-#
-RUN aws ecr get-login-password --region il-central-1 | helm registry login --username AWS --password-stdin 855334947981.dkr.ecr.il-central-1.amazonaws.com
-RUN chmod 770 /viya4-deployment/.config -R
-
 ENV PLAYBOOK=playbook.yaml
 ENV VIYA4_DEPLOYMENT_TOOLING=docker
 ENV ANSIBLE_CONFIG=/viya4-deployment/ansible.cfg
