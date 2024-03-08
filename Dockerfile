@@ -43,10 +43,6 @@ RUN apt-get update && apt-get install --no-install-recommends -y gzip wget git j
 COPY --from=tool_builder /build/kubectl /usr/local/bin/kubectl
 
 WORKDIR /viya4-deployment/
-
-#
-# copy the .aws folder to the folder from which you run the "docker build" command
-#
 COPY . /viya4-deployment/
 
 ENV HOME=/viya4-deployment
