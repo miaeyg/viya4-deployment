@@ -5,6 +5,10 @@
 
 set -e
 
+# Authenticate Helm to AWS ECR
+RUN aws ecr get-login-password --region il-central-1 | helm registry login --username AWS --password-stdin 855334947981.dkr.ecr.il-central-1.amazonaws.com
+RUN chmod 770 /viya4-deployment/.config -R
+
 # setup container user
 echo "viya4-deployment:*:$(id -u):$(id -g):,,,:/viya4-deployment:/bin/bash" >> /etc/passwd
 echo "viya4-deployment:*:$(id -G | cut -d' ' -f 2)" >> /etc/group
