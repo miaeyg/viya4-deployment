@@ -5,7 +5,12 @@
 
 set -e
 
+#
 # Authenticate Helm to AWS ECR
+# When running this image mount the ".aws" folder to it for this to work
+# for example:
+# --volume ~/.aws:/viya4-deployment/.aws
+#
 aws ecr get-login-password --region il-central-1 | helm registry login --username AWS --password-stdin 855334947981.dkr.ecr.il-central-1.amazonaws.com
 chmod 770 /viya4-deployment/.config -R
 
