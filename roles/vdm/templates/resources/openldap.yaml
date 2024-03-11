@@ -16,7 +16,7 @@ spec:
       hostname: ldap-svc
       imagePullSecrets: []
       containers:
-        - image: "{{ V4_CFG_CR_URL }}/osixia/openldap:1.3.0"                # "855334947981.dkr.ecr.il-central-1.amazonaws.com/osixia/openldap:1.3.0"
+        - image: "{{ V4_CFG_CR_HOST }}/osixia/openldap:1.3.0"                # "855334947981.dkr.ecr.il-central-1.amazonaws.com/osixia/openldap:1.3.0"
           imagePullPolicy: IfNotPresent
           name: openldap
           ports:
@@ -106,7 +106,7 @@ spec:
             mode: 0664
       initContainers:
       - name: ldap-init
-        image: "{{ V4_CFG_CR_URL }}/osixia/openldap:1.3.0"                # "855334947981.dkr.ecr.il-central-1.amazonaws.com/osixia/openldap:1.3.0"
+        image: "{{ V4_CFG_CR_HOST }}/osixia/openldap:1.3.0"                # "855334947981.dkr.ecr.il-central-1.amazonaws.com/osixia/openldap:1.3.0"
         command:
           - bash
           - -c
