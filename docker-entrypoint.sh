@@ -11,7 +11,9 @@ set -e
 # for example:
 # --volume ~/.aws:/viya4-deployment/.aws
 #
-aws ecr get-login-password --region il-central-1 | helm registry login --username AWS --password-stdin 855334947981.dkr.ecr.il-central-1.amazonaws.com
+export _region=$(aws configure get region)
+export _accountID=$(aws sts get-caller-identity | jq -r '.Account')
+aws ecr get-login-password --region ${_region} | helm registry login --username AWS --password-stdin ${_accountID}.dkr.ecr.${_region}.amazonaws.com
 chmod 770 /viya4-deployment/.config -R
 
 # setup container user
