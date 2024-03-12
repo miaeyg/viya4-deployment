@@ -12,9 +12,13 @@ set -e
 # --volume ~/.aws:/viya4-deployment/.aws
 #
 if [ -d "/viya4-deployment/.aws" ]; then
-   export _region=$(aws configure get region)
-   export _accountID=$(aws sts get-caller-identity | jq -r '.Account')
-   aws ecr get-login-password --region ${_region} | helm registry login --username AWS --password-stdin ${_accountID}.dkr.ecr.${_region}.amazonaws.com
+   export _profile=$(aws configure list-profiles)
+   echo $_profile
+   export _region=$(aws configure get region --profile ${_profile})
+   echo $_region
+   export _accountID=$(aws sts get-caller-identity --profile ${_profile} | jq -r '.Account')
+   echo $_accountID
+   aws ecr get-login-password --profile ${_profile} --region ${_region} | helm registry login --username AWS --password-stdin ${_accountID}.dkr.ecr.${_region}.amazonaws.com
    chmod 770 /viya4-deployment/.config -R
 fi
 
