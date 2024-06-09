@@ -34,7 +34,6 @@ Supported configuration variables are listed in the table below.  All variables 
     - [Metrics Server](#metrics-server)
     - [NFS Client](#nfs-client)
     - [Postgres NFS Client](#postgres-nfs-client)
-  - [Multi-tenancy](#multi-tenancy)
 
 ## BASE
 
@@ -89,7 +88,7 @@ Viya4-deployment uses the jump server to interact with the RWX filestore, which 
 ## Storage
 When `V4_CFG_MANAGE_STORAGE` is set to `true`, viya4-deployment creates the `sas` and `pg-storage` storage classes using the nfs-subdir-external-provisioner Helm chart. If a jump server is used, viya4-deployment uses that server to create the folders for the `astores`, `bin`, `data` and `homes` RWX Filestore NFS paths that are outlined below in the [RWX Filestore](#rwx-filestore) section.
 
-When `V4_CFG_MANAGE_STORAGE` is set to `false`, viya4-deployment does not create the `sas` or `pg-storage` storage classes for you. In addition, viya4-deployment does not create or manage the RWX Filestore NFS paths. Before you run the SAS Viya deployment, you must set the values for `V4_CFG_RWX_FILESTORE_ASTORES_PATH`, `V4_CFG_RWX_FILESTORE_BIN_PATH`, `V4_CFG_RWX_FILESTORE_DATA_PATH` and `V4_CFG_RWX_FILESTORE_HOMES_PATH` to specify existing NFS folder locations. The viya4-deployment user can create the required NFS folders from the jump server before starting the deployment. Recommended attribute settings for each folder are as follows:
+When `V4_CFG_MANAGE_STORAGE` is set to `false`, viya4-deployment does not create the `sas` or `pg-storage` storage classes for you. In addition, viya4-deployment does not create or manage the RWX Filestore NFS paths. Before you run the SAS Viya deployment, you must set the values for `V4_CFG_RWX_FILESTORE_DATA_PATH` and `V4_CFG_RWX_FILESTORE_HOMES_PATH` to specify existing NFS folder locations. The viya4-deployment user can create the required NFS folders from the jump server before starting the deployment. Recommended attribute settings for each folder are as follows:
 - **filemode**: `0777`
 - **group**: the equivalent of `nogroup` for your operating system
 - **owner**: `nobody`
@@ -105,8 +104,6 @@ When `V4_CFG_MANAGE_STORAGE` is set to `false`, viya4-deployment does not create
 | :--- | ---: | ---: | ---: | ---: | ---: | ---: |
 | V4_CFG_RWX_FILESTORE_ENDPOINT | NFS IP address or host name | string | | false | | baseline, viya |
 | V4_CFG_RWX_FILESTORE_PATH | NFS export path | string | /export | false | | baseline, viya |
-| V4_CFG_RWX_FILESTORE_ASTORES_PATH | NFS path to astores directory | string | <V4_CFG_RWX_FILESTORE_PATH>/\<NAMESPACE>/astores | false | | viya |
-| V4_CFG_RWX_FILESTORE_BIN_PATH | NFS path to bin directory | string | <V4_CFG_RWX_FILESTORE_PATH>/\<NAMESPACE>/bin | false | | viya |
 | V4_CFG_RWX_FILESTORE_DATA_PATH | NFS path to data directory | string | <V4_CFG_RWX_FILESTORE_PATH>/\<NAMESPACE>/data | false | | viya |
 | V4_CFG_RWX_FILESTORE_HOMES_PATH | NFS path to homes directory | string | <V4_CFG_RWX_FILESTORE_PATH>/\<NAMESPACE>/homes | false | | viya |
 
@@ -351,7 +348,7 @@ Additional documentation for the SAS Workload Orchestrator Service can be found 
 | Name | Description | Type | Default | Required | Notes | Tasks |
 | :--- | ---: | ---: | ---: | ---: | ---: | ---: |
 | V4_CFG_CLUSTER_NODE_POOL_MODE | The mode of cluster node pool to use | string | "standard" | false | [standard, minimal] | viya |
-| V4_CFG_EMBEDDED_LDAP_ENABLE | Deploy OpenLDAP in the namespace for authentication | bool | false | false | [Openldap Config](../roles/vdm/templates/generators/openldap-bootstrap-config.yaml) | viya |
+| V4_CFG_EMBEDDED_LDAP_ENABLE | Deploy OpenLDAP in the namespace for authentication | bool | false | false | [Openldap Config](../roles/vdm/templates/generators/openldap-bootstrap-config.yaml). If you do not set this value to true, you must set `V4_CFG_SITEDEFAULT` to point to a sitedefault file which contains values applicable for your authentication configuration. | viya |
 | V4_CFG_CONSUL_ENABLE_LOADBALANCER | Set up LoadBalancer to access the Consul user interface | bool | false | false | Consul UI port is 8500. | viya |
 | V4_CFG_ELASTICSEARCH_ENABLE | Enable search with Open Distro for ElasticSearch | bool | true | false | When deploying LTS earlier than 2020.1 or Stable earlier than 2020.1.2, set to false. | viya |
 | V4_CFG_VIYA_START_SCHEDULE | Configure your SAS Viya platform deployment to start on specific schedules | string |  | false | This variable accepts [CronJob schedule expressions](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#cron-schedule-syntax) to create your Viya start job schedule. See note below. | viya |
@@ -371,7 +368,7 @@ Notes:
 | CERT_MANAGER_NAMESPACE | cert-manager Helm installation namespace | string | cert-manager | false | | baseline |
 | CERT_MANAGER_CHART_URL | cert-manager Helm chart URL | string | https://charts.jetstack.io/ | false | | baseline |
 | CERT_MANAGER_CHART_NAME| cert-manager Helm chart name | string | cert-manager| false | | baseline |
-| CERT_MANAGER_CHART_VERSION | cert-manager Helm chart version | string | 1.13.1 | false | | baseline |
+| CERT_MANAGER_CHART_VERSION | cert-manager Helm chart version | string | 1.14.4 | false | | baseline |
 | CERT_MANAGER_CONFIG | cert-manager Helm values | string | See [this file](../roles/baseline/defaults/main.yml) for more information. | false | | baseline |
 
 Notes:
@@ -386,7 +383,7 @@ Cluster-autoscaler is currently only used for AWS EKS clusters. GCP GKE and Azur
 | CLUSTER_AUTOSCALER_ENABLED | Whether to deploy cluster-autoscaler | bool | true | false | | baseline |
 | CLUSTER_AUTOSCALER_CHART_URL | Cluster-autoscaler Helm chart URL | string | See [this document](https://github.com/kubernetes/autoscaler/tree/master/charts) for more information. | false | | baseline |
 | CLUSTER_AUTOSCALER_CHART_NAME| Cluster-autoscaler Helm chart name | string | cluster-autoscaler | false | | baseline |
-| CLUSTER_AUTOSCALER_CHART_VERSION | Cluster-autoscaler Helm chart version | string | "" | false | If left as "" (empty string), version 9.9.2 is used for Kubernetes clusters whose version is <= 1.24 <br> and version 9.34.1 is used for Kubernetes clusters whose version is >= 1.25 <br> See [Artifact Hub](https://artifacthub.io/packages/helm/cluster-autoscaler/cluster-autoscaler) to determine application version| baseline |
+| CLUSTER_AUTOSCALER_CHART_VERSION | Cluster-autoscaler Helm chart version | string | 9.36.0 | false | Version `9.36.0` is used for Kubernetes clusters whose version is >= 1.25. For Kubernetes clusters whose version is <= 1.24 please set this variable to avoid errors. See [Artifact Hub](https://artifacthub.io/packages/helm/cluster-autoscaler/cluster-autoscaler) to determine application version. | baseline |
 | CLUSTER_AUTOSCALER_CONFIG | Cluster-autoscaler Helm values | string | See [this file](../roles/baseline/defaults/main.yml) for more information. | false | | baseline |
 | CLUSTER_AUTOSCALER_ACCOUNT | Cluster autoscaler AWS role ARN | string | | false | Required to enable cluster-autoscaler on AWS | baseline |
 | CLUSTER_AUTOSCALER_LOCATION |AWS region where Kubernetes cluster is running | string | us-east-1 | false | | baseline |
@@ -416,7 +413,7 @@ The EBS CSI driver is currently only used for kubernetes v1.23 or later AWS EKS 
 | INGRESS_NGINX_NAMESPACE | NGINX Ingress Helm installation namespace | string | ingress-nginx | false | | baseline |
 | INGRESS_NGINX_CHART_URL | NGINX Ingress Helm chart URL | string | See [this document](https://kubernetes.github.io/ingress-nginx) for more information. | false | | baseline |
 | INGRESS_NGINX_CHART_NAME | NGINX Ingress Helm chart name | string | ingress-nginx | false | | baseline |
-| INGRESS_NGINX_CHART_VERSION | NGINX Ingress Helm chart version | string | "" | false | If left as "" (empty string), version `4.9.0` is used for Kubernetes clusters whose version is >= 1.25.X, and for Kubernetes clusters whose version is <= 1.24.X please set this variable to avoid errors. See [Supported Versions table](https://github.com/kubernetes/ingress-nginx/?tab=readme-ov-file#supported-versions-table) for the supported versions list. | baseline |
+| INGRESS_NGINX_CHART_VERSION | NGINX Ingress Helm chart version | string | "" | false | If left as "" (empty string), version `4.9.1` is used for Kubernetes clusters whose version is >= 1.25.X, and for Kubernetes clusters whose version is <= 1.24.X please set this variable to avoid errors. See [Supported Versions table](https://github.com/kubernetes/ingress-nginx/?tab=readme-ov-file#supported-versions-table) for the supported versions list. | baseline |
 | INGRESS_NGINX_CONFIG | NGINX Ingress Helm values | string | See [this file](../roles/baseline/defaults/main.yml) for more information. Altering this value will affect the cluster. | false | | baseline |
 
 ### Metrics Server
@@ -454,56 +451,3 @@ The Postgres NFS client is currently supported by the nfs-subdir-external-provis
 | PG_NFS_CLIENT_CHART_NAME | nfs-subdir-external-provisioner Helm chart name | string | nfs-subdir-external-provisioner | false | | baseline |
 | PG_NFS_CLIENT_CHART_VERSION | nfs-subdir-external-provisioner Helm chart version | string | 4.0.18| false | | baseline |
 | PG_NFS_CLIENT_CONFIG | nfs-subdir-external-provisioner Helm values | string | See [this file](../roles/baseline/defaults/main.yml) for more information. | false | | baseline |
-
-
-## Multi-tenancy
-
-| Name | Description | Type | Default | Required | Notes | Tasks |
-| :--- | ---: | ---: | ---: | ---: | ---: | ---: |
-| V4MT_ENABLE | Enables multi-tenancy in the SAS Viya platform deployment | bool | false | false || viya, multi-tenancy |
-| V4MT_MODE | Set V4MT_MODE to either schema or database | string | schema | false | Two modes of data isolation (schemaPerApplicationTenant, databasePerTenant) are supported for tenant data. The default is schemaPerApplicationTenant.  | viya, multi-tenancy |
-| V4MT_TENANT_IDS | Maps to SAS_TENANT_IDS. One or more tenant IDs to onboard or offboard | string | | false | Example: Single tenant ID: "acme" or Multiple tenant IDs: "acme, cyberdyne, intech". Tenant IDs have a few naming restrictions, See the details [here](https://documentation.sas.com/?cdcId=itopscdc&cdcVersion=default&docsetId=caltenants&docsetTarget=p0emzq13c0zbhxn1hktsdlmig934.htm#n1fptbibrh96r8n1jy317onpjd8r) | viya, multi-tenancy |
-| V4MT_PROVIDER_PASSWORD | Optional: The password that is applied to the tenant administrator on each onboarded tenant | string | | false | Maps to SAS_PROVIDER_PASSWORD. When V4MT_PROVIDER_PASSWORD is specified, V4MT_PROVIDER_PASSWORD_{{TENANT-ID}} cannot be used. See details [here](https://documentation.sas.com/?cdcId=itopscdc&cdcVersion=default&docsetId=caltenants&docsetTarget=p0emzq13c0zbhxn1hktsdlmig934.htm#p1ghvmezrb3cvxn1h7vg4uguqct6). | multi-tenancy |
-| V4MT_PROVIDER_PASSWORD_{{TENANT-ID}} | Optional: Unique sasprovider password for each tenant being onboarded. {{TENANT-ID}} must be in uppercase. | string | | false | Maps to SAS_PROVIDER_PASSWORD_{{TENANT-ID}}. When V4MT_PROVIDER_PASSWORD_{{TENANT-ID}} is specified, V4MT_PROVIDER_PASSWORD cannot be used. See details [here](https://documentation.sas.com/?cdcId=itopscdc&cdcVersion=default&docsetId=caltenants&docsetTarget=p0emzq13c0zbhxn1hktsdlmig934.htm#p1ghvmezrb3cvxn1h7vg4uguqct6). | multi-tenancy |
-| V4MT_TENANT_CAS_CUSTOMIZATION | Map of objects with all tenant CAS customization variables. See the format below. | | | false | | multi-tenancy |
-
-### Tenant CAS Customization
-
-Some of the tenant CAS customizations can be defined with the V4MT_TENANT_CAS_CUSTOMIZATION variable, which is a map of objects. The variable has the following format:
-
-```bash
-V4MT_TENANT_CAS_CUSTOMIZATION:
-  <tenant-id1>:
-    ...
-  <tenant-id2>:
-    ...
-  ...
-```
-Below is the list of parameters each element can contain.
-
-| Name | Description | Type | Default | Required | Notes | Tasks |
-| :--- | ---: | ---: | ---: | ---: | ---: | ---: |
-| memory | Amount of RAM to allocate to per CAS node | string | | false | Numeric value followed by the units, such as 32Gi for 32 gibibytes. In Kubernetes, the unit  is Gi. | multi-tenancy |
-| cpus | Number of CPU cores to allocate per CAS node | string | | false | Either a whole number, representing that number of cores, or a number followed by m, indicating that number of milli-cores. | multi-tenancy |
-| loadbalancer_enabled | Set up LoadBalancer to access CAS binary ports | bool | false | false | | multi-tenancy |
-| loadbalancer_source_ranges | LoadBalancer source ranges specific to the tenant | list | false | false | | multi-tenancy |
-| worker_count | The number of CAS worker nodes for tenants. Default is 0 (SMP) | int | 0 | false | | multi-tenancy |
-| backup_controller_enabled | Enable backup CAS controller | bool | false | false | | multi-tenancy |
-
-Example:
-
-```bash
-V4MT_TENANT_CAS_CUSTOMIZATION:
-  acme:
-    memory: 3Gi
-    cpus: 300m
-    loadbalancer_enabled: true
-    loadbalancer_source_ranges: ['0.0.0.0/0']
-    worker_count: 0
-    backup_controller_enabled: false
-  intech:
-    memory: 2Gi
-    cpus: 250m
-    worker_count: 1
-    backup_controller_enabled: true
-```

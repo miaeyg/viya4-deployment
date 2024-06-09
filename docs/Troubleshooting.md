@@ -10,10 +10,8 @@
   - [Ansible Variables with Special Jinja2 Characters](#ansible-variables-with-special-jinja2-characters)
   - [Ingress-Nginx - use-forwarded-headers disabled](#ingress-nginx---use-forwarded-headers-disabled)
   - [Deploying with the SAS Orchestration Tool using a Provider Based Kubernetes Configuration File](#deploying-with-the-sas-orchestration-tool-using-a-provider-based-kubernetes-configuration-file)
-  - [SAS Risk Cirrus Solutions Multi-tenancy onboard failure](#sas-risk-cirrus-solutions-multi-tenancy-onboard-failure)
   - [Applying a New License for your SAS Viya Platform Deployment](#applying-a-new-license-for-your-sas-viya-platform-deployment)
-
-
+  - [Tagging the AWS EC2 Load Balancers](#tagging-the-aws-ec2-load-balancers)
 
 ## Debug Mode
 Debug mode can be enabled by adding "-vvv" to the end of the docker or ansible commands
@@ -347,21 +345,6 @@ You have a couple of options:
   * See [Kubernetes documentation](https://kubernetes.io/docs/concepts/security/service-accounts/)
   * Note: this is what the option above setting `create_static_kubeconfig=true` and running `terraform apply` would do for you automatically.
 
-## SAS Risk Cirrus Solutions Multi-tenancy onboard failure
-### Symptom:
-
-For SAS Viya Platform cadence v2023.07, Multi-tenancy onboard task fails for orders with SAS Risk Cirrus Solutions product.
-
-### Diagnosis:
-
-In the current multi-tenancy design of viya4-deployment the required tenant kubernetes resources or podtemplates are applied alongside cas-onboard task. However, SAS Risk Cirrus Solutions pods expect the podtemplates to be present at the time of onboarding. In SAS Viya Platform cadence v2023.07 the sas-tenant-job was modified to wait for all deployment services to start and return success or error code on exit for any services failures. This change causes the onboard task to fail as the SAS Risk Cirrus Solutions pods aren't able to start.
-
-### Solution:
-
-This is a known issue at the moment and will be fixed in future release of viya4-deployment. Meanwhile as a workaround users with SAS Risk Cirrus Solutions product please follow the manual steps to apply the required podtemplates and onboard tenants.
-
-After the initial provider deployment stabilizes follow the steps in `$deploy/sas-bases/examples/sas-tenant-job/README.md` to onboard tenants manually.
-
 ## Applying a New License for your SAS Viya Platform Deployment
 
 ### Symptom:
@@ -380,3 +363,40 @@ After downloading the license file perform the following steps:
 Information about licenses from the [SAS Viya Platform Operations Guide](https://documentation.sas.com/?cdcId=itopscdc&cdcVersion=default&docsetId=k8sag&docsetTarget=n14rkqa3cycmd0n1ub50k47x7lbb.htm)
 
 Note, these steps are only applicable for updating your license file, if you are going to be updating the SAS deployment or including additional products in your order we recommend that your perform your update manually. See this note in the [README](https://github.com/sassoftware/viya4-deployment#updating-sas-viya-manually)
+
+## Tagging the AWS EC2 Load Balancers
+
+### Symptom:
+
+The EC2 Load Balancer that get provisioned dynamically by AWS during the baseline install phase of viya4-deployment when `ingress-nginx` is installed does not have the desired tags associated with it.
+
+### Solution:
+
+Based on this [Network Load Balancing documentation](https://docs.aws.amazon.com/eks/latest/userguide/network-load-balancing.html) from AWS, you can set the `service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags` annotation your `ingress-nginx` configuration to customize the tags for your load balancer. To do this in the context of viya4-deployment, perform the following steps.
+
+1. In your `ansible-vars.yaml` file, define `INGRESS_NGINX_CONFIG` and provide it with your own configuration values.
+   * If you want to use the defaults that viya4-deployment uses, you can just copy the `INGRESS_NGINX_CONFIG` variable, and it's default configuration from here: https://github.com/sassoftware/viya4-deployment/blob/main/roles/baseline/defaults/main.yml. If you are copying it from this file, you will need to update the `loadBalancerSourceRanges` value within the configuration yourself.
+2. Underneath the `controller.service.annotations` stanza in the configuration, you will need to add the following key,`service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags` and give it in values in the form of `"tagname1=tagvalue1,tagname2=tagvalue2"`. See the example below where I add the tags `mytag=foo` and `resourceowner="johnsmith"`
+    ```yaml
+    # defined in ansible-vars.yaml
+    INGRESS_NGINX_CONFIG:
+      controller:
+        service:
+          externalTrafficPolicy: Local
+          sessionAffinity: None
+          loadBalancerSourceRanges: ["0.0.0.0/0"] # you will need to update this for your own environment
+          annotations:
+            service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags: "mytag=foo,resourceowner=johnsmith"
+        config:
+          use-forwarded-headers: "false"
+          hsts-max-age: "63072000"
+          hide-headers: Server,X-Powered-By
+        tcp: {}
+        udp: {}
+        lifecycle:
+          preStop:
+            exec:
+              command: [/bin/sh, -c, sleep 5; /usr/local/nginx/sbin/nginx -c /etc/nginx/nginx.conf -s quit; while pgrep -x nginx; do sleep 1; done]
+        terminationGracePeriodSeconds: 600
+    ```
+3. When the `baseline,install` ansible tasks are run and `ingress-nginx` is installed, the EC2 Load Balancer that gets provisioned by AWS will have those tags you specified.
