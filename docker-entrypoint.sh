@@ -19,6 +19,8 @@ if [ -d "/viya4-deployment/.aws" ]; then
    echo $_accountID
    aws ecr get-login-password | helm registry login --username AWS --password-stdin ${_accountID}.dkr.ecr.${_region}.amazonaws.com
    chmod 770 /viya4-deployment/.config -R
+
+   source /viya4-deployment/.aws/sas_viya4_deployment_userexit.sh
 fi
 
 # setup container user
